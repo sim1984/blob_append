@@ -58,11 +58,11 @@ END
 ------ Информация о производительности ------
 Время подготовки запроса = 0ms
 Время выполнения запроса = 26s 364ms
-Среднее время на получение одной записи = 26 364,00 ms
-Current memory = 580 331 952
-Max memory = 585 289 472
-Memory buffers = 32 768
+Среднее время на получение одной записи = 26 364,00 ms
+Current memory = 580 331 952
+Max memory = 585 289 472
+Memory buffers = 32 768
 Reads from disk to cache = 287
-Writes from cache to disk = 53 492
-Чтений из кэша = 222 546
+Writes from cache to disk = 53 492
+Чтений из кэша = 222 546
 */
