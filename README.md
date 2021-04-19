@@ -1,7 +1,7 @@
 # Описание функции BLOB_APPEND
 
-* [В формате HTML (RUS)](https://github.com/sim1984/blob_append/releases/download/1/blob_append.pdf)
-* [В формате PDF (RUS)](https://github.com/sim1984/blob_append/releases/download/1/blob_append.html)
+* [В формате HTML (RUS)](https://github.com/sim1984/blob_append/releases/download/1/blob_append.html)
+* [В формате PDF (RUS)](https://github.com/sim1984/blob_append/releases/download/1/blob_append.pdf)
 
 SQL скрипты примеров:
 
