@@ -22,7 +22,7 @@ Syntax:
 The `BLOB_APPEND` function is designed to concatenate BLOBs without creating intermediate BLOBs.
 Normal concatenation with BLOB arguments will create as many temporary BLOBs as used.
 
-Input аrguments:
+Input Arguments:
 
 -   The first argument is BLOB or NULL. The following options are possible:
 
@@ -32,7 +32,7 @@ Input аrguments:
     - temporary unclosed BLOB with the `BLB_close_on_read` flag: it will be used further
 - other arguments can be of any type. The following behavior is defined for them:
     - NULL ignored
-    - non-BLOBs are converted to strings (as usual) and appended to the content of the result
+    - non-BLOBs are converted to string (as usual) and appended to the content of the result
     - BLOBs, if necessary, are transliterated to the character set of the first argument and their contents are appended to the result
 
 The `BLOB_APPEND` function returns a temporary unclosed BLOB with the` BLB_close_on_read` flag.
