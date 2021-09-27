@@ -1,6 +1,10 @@
 blob_append function
 ===================
 
+Regular operator `||` (concatenation) with BLOB arguments creates temporary BLOB per every pair of args
+with BLOB. This could lead to the excessive memory consumption and growth of database file. The `BLOB_APPEND` function is designed to concatenate BLOBs without creating intermediate BLOBs.
+
+In order to achieve this, the result BLOB is left open for writing instead of been closed immediately after it is filled with data. I.e. such blob could be appended as many times as required. Engine marks such blob with new internal flag `BLB_close_on_read` and closes it automatically when necessary.
 
 *Available in*: DSQL, PSQL.
 
@@ -16,17 +20,15 @@ Syntax:
 
 
 
-*Return type*: temporary not closed BLOB with flag
+*Return type*: BLOB, temporary, not closed (i.e. open for writting), marked by flag
 `BLB_close_on_read`.
 
-The `BLOB_APPEND` function is designed to concatenate BLOBs without creating intermediate BLOBs.
-Normal concatenation with BLOB arguments will create as many temporary BLOBs as used.
 
 Input Arguments:
 
 -   The first argument is BLOB or NULL. The following options are possible:
 
-    - NULL: will create a new empty unclosed BLOB with a flag
+    - NULL:  creates new temporary blob, not closed, with flag `BLB_close_on_read`
     - permanent BLOB (from table) or temporary already closed BLOB:
       will create a new empty unclosed BLOB with the flag `BLB_close_on_read` and the contents of the first BLOB will be added to it
     - temporary unclosed BLOB with the `BLB_close_on_read` flag: it will be used further
@@ -38,7 +40,7 @@ Input Arguments:
 The `BLOB_APPEND` function returns a temporary unclosed BLOB with the` BLB_close_on_read` flag.
 This is either a new BLOB or the same as in the first argument. Thus, a series of operations like `blob = BLOB_APPEND (blob, ...)` will result in the creation of at most one BLOB
 (unless you try to add a BLOB to itself).
-This BLOB will be automatically closed by the engine when the client tries to read it, write it to a table, or use it in other expressions that require reading the content.
+This BLOB will be automatically closed by the engine when the client tries to read it, assign it to a table, or use it in other expressions that require reading the content.
 
 Note:
 
