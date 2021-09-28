@@ -97,21 +97,19 @@ BEGIN
   BEGIN
     SELECT
       LIST(
-        BLOB_APPEND(
-          '{',
-          JSON_UTILS.NUMERIC_PAIR('age', MEASURE.AGE),
-          ',',
-          JSON_UTILS.NUMERIC_PAIR('height', MEASURE.HEIGHT_HORSE),
-          ',',
-          JSON_UTILS.NUMERIC_PAIR('length', MEASURE.LENGTH_HORSE),
-          ',',
-          JSON_UTILS.NUMERIC_PAIR('chestaround', MEASURE.CHESTAROUND),
-          ',',
-          JSON_UTILS.NUMERIC_PAIR('wristaround', MEASURE.WRISTAROUND),
-          ',',
-          JSON_UTILS.NUMERIC_PAIR('weight', MEASURE.WEIGHT_HORSE),
+          '{' ||
+          JSON_UTILS.NUMERIC_PAIR('age', MEASURE.AGE) ||
+          ',' ||
+          JSON_UTILS.NUMERIC_PAIR('height', MEASURE.HEIGHT_HORSE) ||
+          ',' ||
+          JSON_UTILS.NUMERIC_PAIR('length', MEASURE.LENGTH_HORSE) ||
+          ',' ||
+          JSON_UTILS.NUMERIC_PAIR('chestaround', MEASURE.CHESTAROUND) ||
+          ',' ||
+          JSON_UTILS.NUMERIC_PAIR('wristaround', MEASURE.WRISTAROUND) ||
+          ',' ||
+          JSON_UTILS.NUMERIC_PAIR('weight', MEASURE.WEIGHT_HORSE) ||
           '}'
-        )
       ) AS JSON_M
     FROM MEASURE
     WHERE MEASURE.CODE_HORSE = :C.CODE_HORSE
