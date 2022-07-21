@@ -26,25 +26,25 @@ Syntax:
 
 Input Arguments:
 
--   The first argument is BLOB or NULL. The following options are possible:
+-   For the first argument, depending on its value, the following function behavior is defined:
 
-    - NULL:  creates new temporary blob, not closed, with flag `BLB_close_on_read`
-    - permanent BLOB (from table) or temporary already closed BLOB:
-      will create a new empty unclosed BLOB with the flag `BLB_close_on_read` and the contents of the first BLOB will be added to it
-    - temporary unclosed BLOB with the `BLB_close_on_read` flag: it will be used further
+	- NULL: a new empty non-closed BLOB will be created
+	- permanent BLOB (from table) or temporary already closed BLOB:
+	a new empty non-closed BLOB will be created and the contents the first BLOB will be added to it
+	- temporary non-closed BLOB: it will be used later
+	- other data types are converted to a string, a temporary non-closed BLOB will be created with the contents of this string
 - other arguments can be of any type. The following behavior is defined for them:
     - NULL ignored
     - non-BLOBs are converted to string (as usual) and appended to the content of the result
     - BLOBs, if necessary, are transliterated to the character set of the first argument and their contents are appended to the result
 
-The `BLOB_APPEND` function returns a temporary unclosed BLOB with the` BLB_close_on_read` flag.
-This is either a new BLOB or the same as in the first argument. Thus, a series of operations like `blob = BLOB_APPEND (blob, ...)` will result in the creation of at most one BLOB
-(unless you try to add a BLOB to itself).
-This BLOB will be automatically closed by the engine when the client tries to read it, assign it to a table, or use it in other expressions that require reading the content.
-
+The `BLOB_APPEND` function returns a temporary non-closed BLOB as output.
+This is either a new BLOB or the same one that was in the first argument. Thus, a series of operations of the form
+`blob = BLOB_APPEND(blob, ...)` will result in at most one BLOB being created (unless trying to append the BLOB to itself).
+This BLOB will be automatically closed by the engine when it is attempted to be read by a client, written to a table, or used in other expressions that require the content to be read.
 Note:
 
-Testing a BLOB for NULL value using the `IS [NOT] NULL` operator does not read it, and therefore a temporary BLOB with the` BLB_close_on_read` flag will not be closed during such test.
+Testing a BLOB for a NULL value with the `IS [NOT] NULL` operator does not read it, and therefore a temporary open BLOB will not be closed by such tests.
 
 ```
 execute block
