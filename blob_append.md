@@ -1,85 +1,81 @@
-Функция blob_append
+blob_append function
 ===================
 
+Regular operator `||` (concatenation) with BLOB arguments creates temporary BLOB per every pair of args
+with BLOB. This could lead to the excessive memory consumption and growth of database file. The `BLOB_APPEND` function is designed to concatenate BLOBs without creating intermediate BLOBs.
 
-*Доступно в*: DSQL, PSQL.
+In order to achieve this, the result BLOB is left open for writing instead of been closed immediately after it is filled with data. I.e. such blob could be appended as many times as required. Engine marks such blob with new internal flag `BLB_close_on_read` and closes it automatically when necessary.
 
-Синтаксис:
+*Available in*: DSQL, PSQL.
+
+Syntax:
 
 `BLOB_APPEND(<blob> [, <value1>, ... <valueN]>`
 
 
-| Параметр | Описание              |
-|----------|-----------------------|
-| blob     | BLOB или NULL.        |
-| value    | Значение любого типа. |
+| Parameter | Description           |
+|-----------|-----------------------|
+| blob      | BLOB or NULL.         |
+| value     | Any type of value.    |
 
 
 
-*Тип возвращаемого результата*: временный не закрытый BLOB с флагом
+*Return type*: BLOB, temporary, not closed (i.e. open for writting), marked by flag
 `BLB_close_on_read`.
 
-Функция `BLOB_APPEND` предназначена для конкатенации BLOB без создания
-промежуточных BLOB. Обычная операция конкатенации с аргументами типа BLOB всегда создаст столько временных BLOB,
-сколько раз используется.
 
-Входные аргументы:
+Input Arguments:
 
-- Для первого аргумента в зависимости от его значения определено следующее поведение функции:
-	- NULL: будет создан новый пустой не закрытый BLOB
-	- постоянный BLOB (из таблицы) или временный уже закрытый BLOB:
-	будет создан новый пустой не закрытый BLOB и содержимое
-	первого BLOB будет в него добавлено
-	- временный не закрытый BLOB: он будет использован далее
-	- другие типы данных преобразуются в строку, будет создан временный не закрытый BLOB с содержимым этой строки
-- остальные аргументы могут быть любого типа. Для них определено следующее поведение:
-    - NULL игнорируется
-    - не BLOB преобразуются в строки (по обычным правилам) и добавляются к содержимому
-     результата
-    - BLOB при необходимости транслитерируются к набору символов первого аргумента и их
-     содержимое добавляется к результату
+-   For the first argument, depending on its value, the following function behavior is defined:
 
-В качестве выходного значения функция `BLOB_APPEND` возвращает временный не закрытый BLOB с флагом `BLB_close_on_read`.
-Это или новый BLOB, или тот же, что был в первом аргументе. Таким образом ряд операций вида
-`blob = BLOB_APPEND(blob, ...)` приведёт к созданию не более одного BLOB (если не пытаться добавить BLOB к самому себе).
-Этот BLOB будет автоматически закрыт движком при попытке прочитать его клиентом, записать в таблицу или использовать в других выражениях, требующих чтения содержимого.
+	- NULL: a new empty non-closed BLOB will be created
+	- permanent BLOB (from table) or temporary already closed BLOB:
+	a new empty non-closed BLOB will be created and the contents the first BLOB will be added to it
+	- temporary non-closed BLOB: it will be used later
+	- other data types are converted to a string, a temporary non-closed BLOB will be created with the contents of this string
+- other arguments can be of any type. The following behavior is defined for them:
+    - NULL ignored
+    - non-BLOBs are converted to string (as usual) and appended to the content of the result
+    - BLOBs, if necessary, are transliterated to the character set of the first argument and their contents are appended to the result
 
-Замечание
+The `BLOB_APPEND` function returns a temporary non-closed BLOB as output.
+This is either a new BLOB or the same one that was in the first argument. Thus, a series of operations of the form
+`blob = BLOB_APPEND(blob, ...)` will result in at most one BLOB being created (unless trying to append the BLOB to itself).
+This BLOB will be automatically closed by the engine when it is attempted to be read by a client, written to a table, or used in other expressions that require the content to be read.
+Note:
 
-Проверка BLOB на значение NULL с помощью оператора `IS [NOT] NULL` не читает его, а следовательно временный BLOB
-с флагом `BLB_close_on_read` не будет закрыт при таких проверках.
+Testing a BLOB for a NULL value with the `IS [NOT] NULL` operator does not read it, and therefore a temporary open BLOB will not be closed by such tests.
 
 ```
 execute block
 returns (b blob sub_type text)
 as
 begin
-  -- создаст новый временный не закрытый BLOB
-  -- и запишет в него строку из 2-ого аргумента
+  -- will create a new temporary not closed BLOB 
+  -- and will write to it the string from the 2nd argument
   b = blob_append(null, 'Hello ');
-  -- добавляет во временный BLOB две строки не закрывая его
+  -- adds two strings to the temporary BLOB without closing it 
   b = blob_append(b, 'World', '!');
-  -- сравнение BLOB со строкой закроет его, ибо для этого надо прочитать BLOB
+  -- comparing a BLOB with a string will close it, because for this you need to read the BLOB
   if (b = 'Hello World!') then
   begin
   -- ...
   end
-  -- создаст временный закрытый BLOB добавив в него строку
+  -- will create a temporary closed BLOB by adding a string to it
   b = b || 'Close';
   suspend;
 end
 ```
 
-Совет
+Tip:
 
-Используйте функции LIST и BLOB_APPEND для конкатенации BLOB. Это позволит сэкономить объём потребляемой памяти, 
-дисковый ввод/вывод, а также предотвратит разрастание базы данных из-за создания множества временных BLOB при использовании операторов конкатенации.
+Use the `LIST` and` BLOB_APPEND` functions to concatenate BLOBs. This will save memory consumption, disk I/O,
+and prevent database growth due to the creation of many temporary BLOBs when using concatenation operators.
 
-Пример:
+Example:
 
-Предположим вам надо собрать JSON на стороне сервера. У нас есть PSQL пакет JSON_UTILS с набором функций для
-преобразования элементарных типов данных в JSON нотацию. Тогда сборка JSON с использованием функции `BLOB_APPEND` будет выглядеть 
-следующим образом:
+Let's say you need to build JSON on the server side. We have a PSQL package JSON_UTILS with a set of functions for converting primitive data types to JSON notation.
+Then the JSON building using the `BLOB_APPEND` function will look like this:
 
 ```
 EXECUTE BLOCK
@@ -138,5 +134,4 @@ BEGIN
 END
 ```
 
-Аналогичный пример с использованием обычного оператора конкатенации || 
-работает в 18 раз медленнее (на моём сервере), и делает в 1000 раз больше операций записи на диск.
+A similar example using the usual concatenation operator `||` is an order of magnitude slower and does 1000 times more disk writes.
