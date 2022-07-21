@@ -10,13 +10,7 @@ In order to achieve this, the result BLOB is left open for writing instead of be
 
 Syntax:
 
-`BLOB_APPEND(<blob> [, <value1>, ... <valueN]>`
-
-
-| Parameter | Description           |
-|-----------|-----------------------|
-| blob      | BLOB or NULL.         |
-| value     | Any type of value.    |
+`BLOB_APPEND(<value1>, ... <valueN]>`
 
 
 
